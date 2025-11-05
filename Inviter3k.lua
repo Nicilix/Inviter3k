@@ -141,27 +141,26 @@ gui.inviteButton:SetScript("OnClick", function()
         print("No Battle.net friends found.")
         return
     end
-    for i = 1, numOfFriends do
-        local accountInfo = C_BattleNet.GetFriendAccountInfo(i)
-        if accountInfo and accountInfo.accountName then
+        for i = 1, BNGetNumFriends() do
+            local accountInfo = C_BattleNet.GetFriendAccountInfo(i)
+        if accountInfo and accountInfo.battleTag and accountInfo.gameAccountInfo then
             local games = accountInfo.gameAccountInfo
-            if games then
-                if games.isOnline ~= nil then
-                    games = {games}
-                end
-                for _, gameInfo in ipairs(games) do
-                    if gameInfo.isOnline and gameInfo.clientProgram == "WoW" then
-                        for _, target in ipairs(Inviter3kDB) do
-                            if accountInfo.accountName == target then
-                                BNInviteFriend(gameInfo.gameAccountID)
-                                print("Invited:", accountInfo.accountName)
-                            end
+            if games.isOnline ~= nil then
+            games = {games} -- handle single-entry case
+        end
+        for _, gameInfo in ipairs(games) do
+            if gameInfo.isOnline and gameInfo.clientProgram == "WoW" then
+                for _, savedTag in ipairs(Inviter3kDB) do
+                    if string.lower(accountInfo.battleTag) == string.lower(savedTag) then
+                        BNInviteFriend(gameInfo.gameAccountID)
+                        print("Invited:", accountInfo.battleTag)
                         end
                     end
                 end
             end
         end
     end
+
 end)
 
 -- ==============================
@@ -220,6 +219,11 @@ SlashCmdList["INVITER3K"] = function()
         gui:Show()
         gui.listScroll:UpdateList()
     end
+end
+SLASH_INVITER3KINVITE1 = "/invite3k"
+SLASH_INVITER3KINVITE2 = "/i3kinvite"
+SlashCmdList["INVITER3KINVITE"] = function()
+    gui.inviteButton:Click()
 end
 
 -- ==============================
