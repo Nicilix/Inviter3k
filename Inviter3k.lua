@@ -1,60 +1,128 @@
-local function OnEvent(self, event, addOnName)
-    if addOnName == "Inviter3k" then
-        Inviter3kDB = Inviter3kDB or {}
-        self.db = Inviter3kDB
-        for k,v in pairs(defaults) do
-            if self.db[k] == nil then
-                self.db[k] = v
-            end
-        end
-        self.db.battletag = self.db.battletag
-    end
-end
-
+-- Inviter3k.lua
+local ADDON_NAME = ...
 local eventFrame = CreateFrame("Frame")
---Adds Event that need to be tracked
+
+-- Register events
 eventFrame:RegisterEvent("PLAYER_LOGIN")
 eventFrame:RegisterEvent("ADDON_LOADED")
-eventFrame:SetScript("OnEvent", OnEvent)
+eventFrame:RegisterEvent("PLAYER_LOGOUT")
 
---Defines Slash Comands
---Slash for inviting
-SLASH_INVITER3KINVITE1 = "/inviter3kinv"
---shlash for Adding friend into invite pool
-SLASH_INVITER3KADD1 = "/inviter3kadd"
---Slash for Removing Friend from invite pool
-SLASH_INVITER3KREMOVE1 = "/inviter3kremove"
---Slash for showing current invite pool
-SLASH_INVITER3KLIST1 = "/inviter3klist"
---Makes the Slash Commands do something
-
-
-Battlenet = {}
-
-
-function  SlashCmdList.INVITER3KINVITE(msg, editBox)
-    print("Inviting")
+-- ==============================
+-- SavedVariables initialization
+-- ==============================
+local function InitDatabase()
+    Inviter3kDB = Inviter3kDB or {}
 end
-SlashCmdList.INVITER3KADD = function(msg, editBox)
-    local name = strsplit(" ", msg)
-    f.db = Inviter3kDB
-    if #name > 0 then
-        table.insert(f.db.battletag, name)
-    else 
-        print("needs a name")
+
+eventFrame:SetScript("OnEvent", function(_, event, arg1)
+    if event == "ADDON_LOADED" and arg1 == ADDON_NAME then
+        InitDatabase()
+        print("|cff33ff99Inviter3k:|r Loaded! Use /inviter3k for options.")
+    elseif event == "PLAYER_LOGOUT" then
+        -- Optional: save or cleanup before logout
+    end
+end)
+
+-- ==============================
+-- Utility functions
+-- ==============================
+local function AddBattleTag(accountName)
+    for _, name in ipairs(Inviter3kDB) do
+        if name == accountName then
+            print("Already added:", accountName)
+            return
+        end
+    end
+    table.insert(Inviter3kDB, accountName)
+    print("Added:", accountName, "to the invite list.")
+end
+
+local function RemoveBattleTag(accountName)
+    for i, name in ipairs(Inviter3kDB) do
+        if name == accountName then
+            table.remove(Inviter3kDB, i)
+            print("Removed:", accountName)
+            return
+        end
+    end
+    print(accountName, "not found in the list.")
+end
+
+local function ListBattleTag()
+    if not Inviter3kDB or #Inviter3kDB == 0 then
+        print("Invite list is empty.")
+        return
+    end
+    print("Current Invite List:")
+    for i, name in ipairs(Inviter3kDB) do
+        print(i, name)
     end
 end
-    
 
+-- ==============================
+-- Invite all friends in the list
+-- ==============================
+local function InviteAllOnList()
+    local numOfFriends = BNGetNumFriends() -- Correct WoW API
+    if numOfFriends == 0 then
+        print("No Battle.net friends found.")
+        return
+    end
 
-function SlashCmdList.INVITER3KREMOVE(msg,editBox)
-    print("Removed a person")
+    for i = 1, numOfFriends do
+        local accountInfo = C_BattleNet.GetFriendAccountInfo(i)
+        if accountInfo and accountInfo.accountName then
+            local games = accountInfo.gameAccountInfo
+            if games and type(games) == "table" then
+                for _, gameInfo in ipairs(games) do
+                    if gameInfo and gameInfo.isOnline and gameInfo.clientProgram == "WoW" then
+                        for _, target in ipairs(Inviter3kDB) do
+                            if accountInfo.accountName == target then
+                                BNInviteFriend(gameInfo.gameAccountID)
+                                print("Invited:", accountInfo.accountName)
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
 end
-function SlashCmdList.INVITER3KLIST(msg, editBox)
-    for key,value in ipairs(Battlenet) do
-    print(key,value)
-    end     
+
+-- ==============================
+-- Slash Commands
+-- ==============================
+SLASH_INVITER3K1 = "/inviter3k"
+SLASH_INVITER3K2 = "/inv3k"
+SLASH_INVITER3K3 = "/i3k"
+
+SlashCmdList["INVITER3K"] = function(msg)
+    msg = msg or ""
+    local cmd, arg = msg:match("^(%S*)%s*(.-)$")
+    cmd = cmd:lower()
+
+    if cmd == "add" and arg ~= "" then
+        AddBattleTag(arg)
+
+    elseif cmd == "remove" and arg ~= "" then
+        RemoveBattleTag(arg)
+
+    elseif cmd == "list" then
+        ListBattleTag()
+
+    elseif cmd == "inv" or cmd == "" then
+        InviteAllOnList()
+
+    elseif cmd == "reset" then
+        Inviter3kDB = {}
+        print("Invite list has been reset.")
+
+    else
+        print("|cff33ff99Inviter3k Commands:|r")
+        print("  /inviter3k add <BattleTag>")
+        print("  /inviter3k remove <BattleTag>")
+        print("  /inviter3k list")
+        print("  /inviter3k inv")
+        print("  /inviter3k reset")
+    end
 end
-
-
-
