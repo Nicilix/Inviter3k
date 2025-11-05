@@ -1,3 +1,16 @@
+local function OnEvent(self, event, addOnName)
+    if addOnName == "Inviter3k" then
+        Inviter3kDB = Inviter3kDB or {}
+        self.db = Inviter3kDB
+        for k,v in pairs(defaults) do
+            if self.db[k] == nil then
+                self.db[k] = v
+            end
+        end
+        self.db.battletag = self.db.battletag
+    end
+end
+
 local eventFrame = CreateFrame("Frame")
 --Adds Event that need to be tracked
 eventFrame:RegisterEvent("PLAYER_LOGIN")
@@ -15,6 +28,7 @@ SLASH_INVITER3KREMOVE1 = "/inviter3kremove"
 SLASH_INVITER3KLIST1 = "/inviter3klist"
 --Makes the Slash Commands do something
 
+
 Battlenet = {}
 
 
@@ -23,8 +37,9 @@ function  SlashCmdList.INVITER3KINVITE(msg, editBox)
 end
 SlashCmdList.INVITER3KADD = function(msg, editBox)
     local name = strsplit(" ", msg)
+    f.db = Inviter3kDB
     if #name > 0 then
-        table.insert(Battlenet, name)
+        table.insert(f.db.battletag, name)
     else 
         print("needs a name")
     end
@@ -42,16 +57,4 @@ function SlashCmdList.INVITER3KLIST(msg, editBox)
 end
 
 
--- local function OnEvent(self, event, addOnName)
---     if addOnName == "Inviter3k" then
---         Inviter3kDB = Inviter3kDB or {}
---         self.db = Inviter3kDB -- makes it more readable and generally a good practice
--- 		for k, v in pairs(defaults) do -- copy the defaults table and possibly any new options
--- 			if self.db[k] == nil then -- avoids resetting any false values
--- 				self.db[k] = v
--- 			end
-    
---         end
---     end
--- end
 
