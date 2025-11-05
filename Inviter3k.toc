@@ -1,0 +1,8 @@
+## Interface: 110205
+## Version: 1.0.0
+## Title: Inviter3k
+## Notes: Invites Bnett Friends
+## Author: Nicilix
+## SavedVariables: Inviter3kDB
+
+Inviter3k.lua
