@@ -1,0 +1,27 @@
+name: Release to CurseForge
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repo
+      uses: actions/checkout@v3
+
+    - name: Zip Addon Folder
+      run: |
+        zip -r addon.zip Inviter3k
+
+    - name: Upload to CurseForge
+      uses: CurseForge/CurseForge-Upload@v1
+      with:
+        token: ${{ secrets.CURSEFORGE_API_TOKEN }}
+        project_id: 1379137
+        file_path: addon.zip
+        changelog: "Auto-released from main branch"
+        changelog_type: markdown
+        release_type: release
