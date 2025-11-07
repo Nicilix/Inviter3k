@@ -1,4 +1,4 @@
-name: Create Zip Package
+name: Package Addon
 
 on:
   workflow_dispatch:
@@ -17,45 +17,58 @@ jobs:
           submodules: true
 
       - name: Determine package name
-        id: pkg
+        id: meta
         run: |
           if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
-            NAME="${GITHUB_REF#refs/tags/}"
+            PKG="${GITHUB_REF#refs/tags/}"
           else
-            SHORT_SHA=$(git rev-parse --short HEAD)
-            NAME="${SHORT_SHA}-$(date -u +%Y%m%dT%H%M%SZ)"
+            PKG="Inviter3k-${GITHUB_SHA::7}"
           fi
-          echo "pkg_name=${NAME}" >> $GITHUB_OUTPUT
+          echo "pkg=${PKG}" >> $GITHUB_OUTPUT
 
-      - name: Create .release directory
-        run: mkdir -p .release
-
-      - name: Zip repository (exclude patterns)
+      - name: Create staging and copy addon files
         run: |
-          ZIP_FILE=".release/${{ steps.pkg.outputs.pkg_name }}.zip"
-          # Exclude .git, GitHub workflow dir, common meta files, caches and node/python deps
-          zip -r "$ZIP_FILE" . \
-            -x ".git/*" ".github/*" ".gitignore" "README.md" "README.txt" "LICENSE" "pkgmeta.yaml" \
-               ".DS_Store" "node_modules/*" "venv/*" ".venv/*" ".cache/*" "__pycache__/*" \
-               "*.log" "*.tmp"
-          echo "zip_path=$ZIP_FILE" >> $GITHUB_OUTPUT
+          STAGE="$(mktemp -d)"
+          ADDON_DIR="${STAGE}/Inviter3k"
+          mkdir -p "$ADDON_DIR"
+          # Copy the addon files/folders you want included
+          # Adjust the list if your addon has additional items
+          cp -r Libs "$ADDON_DIR/" 2>/dev/null || true
+          cp icon.tga "$ADDON_DIR/" 2>/dev/null || true
+          cp Inviter3k.lua "$ADDON_DIR/" 2>/dev/null || true
+          cp Inviter3k.toc "$ADDON_DIR/" 2>/dev/null || true
+          # optional: copy README or other files required by CurseForge
+          # cp README.txt "$ADDON_DIR/" 2>/dev/null || true
+          echo "stage=$STAGE" >> $GITHUB_OUTPUT
 
-      - name: Zip repository (exclude patterns)
+      - name: Create ZIP outside repo then move into .release
         id: zip
         run: |
-          ZIP_FILE=".release/${{ steps.pkg.outputs.pkg_name }}.zip"
-          zip -r "$ZIP_FILE" . \
-            -x ".git/*" ".github/*" ".gitignore" "README.md" "README.txt" "LICENSE" "pkgmeta.yaml" \
-               ".DS_Store" "node_modules/*" "venv/*" ".venv/*" ".cache/*" "__pycache__/*" \
-               "*.log" "*.tmp"
-          echo "zip_path=$ZIP_FILE" >> $GITHUB_OUTPUT
+          PKG="${{ steps.meta.outputs.pkg }}"
+          STAGE="${{ steps.meta.outputs.stage }}" || STAGE="${{ steps.meta.outputs.stage }}"
+          # use the stage created in the previous step
+          STAGEDIR=$(mktemp -d)
+          # If stage path was written to outputs, prefer it:
+          if [ -n "${{ steps.meta.outputs.stage }}" ]; then
+            STAGEDIR="${{ steps.meta.outputs.stage }}"
+          else
+            echo "No explicit stage output found; creating new staging dir"
+            STAGEDIR="$(mktemp -d)"
+          fi
+          # create zip from the staged addon folder so the archive root is Inviter3k/
+          TMPZIP="/tmp/${PKG}.zip"
+          (cd "$(dirname "$STAGEDIR")" && zip -r "$TMPZIP" "$(basename "$STAGEDIR")/Inviter3k" > /dev/null)
+          mkdir -p .release
+          mv "$TMPZIP" ".release/${PKG}.zip"
+          echo "zip_path=.release/${PKG}.zip" >> $GITHUB_OUTPUT
 
-      - name: List .release contents
-        run: ls -la .release
+      - name: Show .release contents
+        run: ls -la .release || true
 
-      - name: Upload packaged zip as artifact
+      - name: Upload addon zip as artifact
         uses: actions/upload-artifact@v4
         with:
-          name: packaged-zip
+          name: Inviter3k-package
           path: ${{ steps.zip.outputs.zip_path }}
+
 
