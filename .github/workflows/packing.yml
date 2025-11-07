@@ -40,6 +40,16 @@ jobs:
                "*.log" "*.tmp"
           echo "zip_path=$ZIP_FILE" >> $GITHUB_OUTPUT
 
+      - name: Zip repository (exclude patterns)
+        id: zip
+        run: |
+          ZIP_FILE=".release/${{ steps.pkg.outputs.pkg_name }}.zip"
+          zip -r "$ZIP_FILE" . \
+            -x ".git/*" ".github/*" ".gitignore" "README.md" "README.txt" "LICENSE" "pkgmeta.yaml" \
+               ".DS_Store" "node_modules/*" "venv/*" ".venv/*" ".cache/*" "__pycache__/*" \
+               "*.log" "*.tmp"
+          echo "zip_path=$ZIP_FILE" >> $GITHUB_OUTPUT
+
       - name: List .release contents
         run: ls -la .release
 
@@ -47,6 +57,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: packaged-zip
-          path: ${{ steps.pkg.outputs.pkg_name }}.zip
-          # fallback in case path not exact:
-          # path: .release/*.zip
+          path: ${{ steps.zip.outputs.zip_path }}
+
