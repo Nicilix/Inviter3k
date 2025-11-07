@@ -27,40 +27,33 @@ jobs:
           echo "pkg=${PKG}" >> $GITHUB_OUTPUT
 
       - name: Create staging and copy addon files
+        id: stage
         run: |
           STAGE="$(mktemp -d)"
           ADDON_DIR="${STAGE}/Inviter3k"
           mkdir -p "$ADDON_DIR"
-          # Copy the addon files/folders you want included
-          # Adjust the list if your addon has additional items
           cp -r Libs "$ADDON_DIR/" 2>/dev/null || true
           cp icon.tga "$ADDON_DIR/" 2>/dev/null || true
           cp Inviter3k.lua "$ADDON_DIR/" 2>/dev/null || true
           cp Inviter3k.toc "$ADDON_DIR/" 2>/dev/null || true
-          # optional: copy README or other files required by CurseForge
-          # cp README.txt "$ADDON_DIR/" 2>/dev/null || true
           echo "stage=$STAGE" >> $GITHUB_OUTPUT
 
       - name: Create ZIP outside repo then move into .release
         id: zip
         run: |
           PKG="${{ steps.meta.outputs.pkg }}"
-          STAGE="${{ steps.meta.outputs.stage }}" || STAGE="${{ steps.meta.outputs.stage }}"
-          # use the stage created in the previous step
-          STAGEDIR=$(mktemp -d)
-          # If stage path was written to outputs, prefer it:
-          if [ -n "${{ steps.meta.outputs.stage }}" ]; then
-            STAGEDIR="${{ steps.meta.outputs.stage }}"
-          else
-            echo "No explicit stage output found; creating new staging dir"
-            STAGEDIR="$(mktemp -d)"
+          STAGEDIR="${{ steps.stage.outputs.stage }}"
+          if [ -z "$STAGEDIR" ]; then
+            echo "Missing staging dir; aborting"
+            exit 1
           fi
-          # create zip from the staged addon folder so the archive root is Inviter3k/
           TMPZIP="/tmp/${PKG}.zip"
-          (cd "$(dirname "$STAGEDIR")" && zip -r "$TMPZIP" "$(basename "$STAGEDIR")/Inviter3k" > /dev/null)
+          # create zip so archive root is Inviter3k/
+          (cd "$STAGEDIR" && zip -r "$TMPZIP" Inviter3k > /dev/null)
           mkdir -p .release
           mv "$TMPZIP" ".release/${PKG}.zip"
           echo "zip_path=.release/${PKG}.zip" >> $GITHUB_OUTPUT
+
 
       - name: Show .release contents
         run: ls -la .release || true
