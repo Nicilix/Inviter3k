@@ -1,0 +1,52 @@
+name: Create Zip Package
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: true
+
+      - name: Determine package name
+        id: pkg
+        run: |
+          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
+            NAME="${GITHUB_REF#refs/tags/}"
+          else
+            SHORT_SHA=$(git rev-parse --short HEAD)
+            NAME="${SHORT_SHA}-$(date -u +%Y%m%dT%H%M%SZ)"
+          fi
+          echo "pkg_name=${NAME}" >> $GITHUB_OUTPUT
+
+      - name: Create .release directory
+        run: mkdir -p .release
+
+      - name: Zip repository (exclude patterns)
+        run: |
+          ZIP_FILE=".release/${{ steps.pkg.outputs.pkg_name }}.zip"
+          # Exclude .git, GitHub workflow dir, common meta files, caches and node/python deps
+          zip -r "$ZIP_FILE" . \
+            -x ".git/*" ".github/*" ".gitignore" "README.md" "README.txt" "LICENSE" "pkgmeta.yaml" \
+               ".DS_Store" "node_modules/*" "venv/*" ".venv/*" ".cache/*" "__pycache__/*" \
+               "*.log" "*.tmp"
+          echo "zip_path=$ZIP_FILE" >> $GITHUB_OUTPUT
+
+      - name: List .release contents
+        run: ls -la .release
+
+      - name: Upload packaged zip as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: packaged-zip
+          path: ${{ steps.pkg.outputs.pkg_name }}.zip
+          # fallback in case path not exact:
+          # path: .release/*.zip
