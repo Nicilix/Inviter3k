@@ -7,7 +7,7 @@ eventFrame:RegisterEvent("ADDON_LOADED")
 -- ==============================
 local function InitDatabase()
     Inviter3kDB = Inviter3kDB or {}
-    Inviter3kDB.minimap = Inviter3kDB.minimap or { minimapPos = 220 }
+    Inviter3kDB.minimap = Inviter3kDB.minimap or { minimapPos = 220, hide = false }
 end
 
 -- ==============================
@@ -206,7 +206,33 @@ StaticPopupDialogs["INVITER3K_REMOVE_CONFIRM"] = {
     whileDead = true,
     hideOnEscape = true,
 }
+-- helper to apply saved state
+local function UpdateMinimapIcon()
+    local dbicon = LibStub("LibDBIcon-1.0", true)
+    if not dbicon then return end
+    if Inviter3kDB.minimap.hide then
+        dbicon:Hide("Inviter3k")
+        print("Inviter3k minimap icon hidden.")
+    else
+        dbicon:Show("Inviter3k")
+        print("Inviter3k minimap icon shown.")
+    end
+end
+-- helper to print one command line
+local function PrintCmd(cmd, desc)
+    print(string.format("|cffffff00%s|r - %s", cmd, desc))
+end
 
+-- Help handler: list all available slash commands and short descriptions
+SLASH_INVITER3KHELP1 = "/inviter3khelp"
+SLASH_INVITER3KHELP2 = "/i3khelp"
+SlashCmdList["INVITER3KHELP"] = function()
+    print("Inviter3k commands:")
+    PrintCmd("/inviter3k or /i3k", "Toggle the main GUI")
+    PrintCmd("/invite3k or /i3kinvite", "Invite saved BattleTags who are online in WoW")
+    PrintCmd("/i3ktoggle or /inviter3ktoggle", "Toggle the minimap icon; also accepts 'show' or 'hide'")
+    PrintCmd("/inviter3khelp or /i3khelp", "Show this help list")
+end
 -- ==============================
 -- Slash command to toggle GUI
 -- ==============================
@@ -226,6 +252,19 @@ SlashCmdList["INVITER3KINVITE"] = function()
     gui.inviteButton:Click()
 end
 
+SLASH_INVITER3KTOGGLEMAP1 = "/i3ktoggle"
+SLASH_INVITER3KTOGGLEMAP2 = "/inviter3ktoggle"
+SlashCmdList["INVITER3KTOGGLEMAP"] = function(msg)
+    local cmd = msg and msg:lower():trim() or ""
+    if cmd == "show" then
+        Inviter3kDB.minimap.hide = false
+    elseif cmd == "hide" then
+        Inviter3kDB.minimap.hide = true
+    else
+        Inviter3kDB.minimap.hide = not Inviter3kDB.minimap.hide
+    end
+    UpdateMinimapIcon()
+end
 -- ==============================
 -- Event Handler
 -- ==============================
@@ -252,6 +291,12 @@ eventFrame:SetScript("OnEvent", function(_, event, arg1)
             end,
         })
         LibStub("LibDBIcon-1.0"):Register("Inviter3k", ldb, Inviter3kDB.minimap)
+                -- apply minimap saved state if you have an UpdateMinimapIcon helper
+        if UpdateMinimapIcon then
+            UpdateMinimapIcon()
+        end
+        -- print a short help hint after loading
+        print("|cffffff00Inviter3k loaded.|r Type |cffffff00/i3khelp|r for list of commands.")
     end
 end)
 
