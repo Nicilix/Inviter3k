@@ -5,6 +5,11 @@
 ## Author: Nicilix
 ## SavedVariables: Inviter3kDB
 
+
+Libs/LibStub/LibStub.lua
+Libs/LibDataBroker-1.1/LibDataBroker-1.1.lua
+Libs/LibDBIcon-1.0/LibDBIcon-1.0.lua
+
 Lua/core.lua
 Lua/db.lua
 Lua/groups.lua
@@ -12,7 +17,6 @@ Lua/invite.lua
 Lua/gui.lua
 Lua/slash.lua
 
-Libs/LibStub/LibStub.lua
-Libs/LibDBIcon-1.0/LibDBIcon-1.0.lua
-Libs/LibDataBroker-1.1/LibDataBroker-1.1.lua
+
+
 
