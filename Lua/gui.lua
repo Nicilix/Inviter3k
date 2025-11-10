@@ -144,6 +144,8 @@ local function buildPanes()
     right.inviteBtn:SetPoint("BOTTOMRIGHT", right, "BOTTOMRIGHT", -6, 6)
     right.inviteBtn:SetText("Invite Group")
 
+
+
     -- store panes
     addon.gui.leftPane = left
     addon.gui.rightPane = right
@@ -195,11 +197,13 @@ local function buildPanes()
 end
 
 -- refresh functions that operate on panes inside addon.gui
+-- refresh functions that operate on panes inside addon.gui
 function refreshGroupList()
     local left = addon.gui.leftPane
     local right = addon.gui.rightPane
     if not left or not right then return end
 
+    -- Hide old buttons
     for _, btn in ipairs(left.groupButtons) do btn:Hide() end
 
     local yOffset = 0
@@ -216,6 +220,7 @@ function refreshGroupList()
             btn:SetHighlightFontObject("GameFontHighlight")
 
             btn:SetScript("OnClick", function(self)
+                -- update selection
                 addon.selectedGroup = name
                 addon.selectedMemberIndex = nil
                 if addon.selectedGroupButton then addon.selectedGroupButton:UnlockHighlight() end
@@ -235,38 +240,44 @@ function refreshGroupList()
             btn:GetFontString():SetTextColor(1, 1, 1)
         end
 
+        -- highlight if this is the selected group
+        if addon.selectedGroup == name then
+            btn:LockHighlight()
+            addon.selectedGroupButton = btn
+            right.groupLabel:SetText("Selected group: " .. name)
+        else
+            btn:UnlockHighlight()
+        end
+
         btn:Show()
         yOffset = yOffset + 22
     end
 
     left.groupContent:SetHeight(math.max(yOffset, 1))
 
-    if not addon.selectedGroup and #groups > 0 then
-        addon.selectedGroup = groups[1]
-        for _, btn in ipairs(left.groupButtons) do
-            if btn:GetText() == addon.selectedGroup then
-                if addon.selectedGroupButton then addon.selectedGroupButton:UnlockHighlight() end
-                addon.selectedGroupButton = btn
-                btn:LockHighlight()
-                break
-            end
-        end
-        right.groupLabel:SetText("Selected group: " .. addon.selectedGroup)
-    elseif addon.selectedGroup and not Inviter3kDB.groups[addon.selectedGroup] then
+    -- clear selection if invalid
+    if addon.selectedGroup and not Inviter3kDB.groups[addon.selectedGroup] then
         addon.selectedGroup = nil
-        right.groupLabel:SetText("Selected group: None")
         if addon.selectedGroupButton then addon.selectedGroupButton:UnlockHighlight() end
         addon.selectedGroupButton = nil
+        right.groupLabel:SetText("Selected group: None")
     end
 
-    refreshMemberList()
+    -- refresh members if valid group
+    if addon.selectedGroup then
+        refreshMemberList()
+    else
+        right.groupLabel:SetText("Selected group: None")
+        addon.selectedMemberIndex = nil
+        refreshMemberList()
+    end
 end
-
 function refreshMemberList()
     local left = addon.gui.leftPane
     local right = addon.gui.rightPane
     if not left or not right then return end
 
+    -- Hide old buttons
     for _, btn in ipairs(right.memberButtons) do btn:Hide() end
 
     if not addon.selectedGroup then
@@ -276,6 +287,7 @@ function refreshMemberList()
         right.inviteBtn:Disable()
         right.removeBtn:Disable()
         right.memberContent:SetHeight(1)
+        addon.selectedMemberIndex = nil
         return
     end
 
@@ -288,18 +300,23 @@ function refreshMemberList()
     local members = addon.GetGroupMembers(addon.selectedGroup)
     local yOffset = 0
 
+    -- clear selection if index is out of range
+    if addon.selectedMemberIndex and (addon.selectedMemberIndex < 1 or addon.selectedMemberIndex > #members) then
+        if right.memberButtons[addon.selectedMemberIndex] then
+            right.memberButtons[addon.selectedMemberIndex]:UnlockHighlight()
+        end
+        addon.selectedMemberIndex = nil
+    end
+
     for i, name in ipairs(members) do
         local btn = right.memberButtons[i]
         if not btn then
             btn = CreateFrame("Button", nil, right.memberContent, "GameMenuButtonTemplate")
-            btn:ClearAllPoints()
-            local btnWidth = (right.memberScroll and right.memberScroll:GetWidth()) or (right:GetWidth() and right:GetWidth() - 14) or 120
-            btn:SetSize(math.max(1, btnWidth - 8), 20)
-            btn:SetPoint("TOPLEFT", right.memberContent, "TOPLEFT", 8, -yOffset)
             btn:SetNormalFontObject("GameFontNormal")
             btn:SetHighlightFontObject("GameFontHighlight")
 
             btn:SetScript("OnClick", function(self)
+                -- toggle selection
                 if addon.selectedMemberIndex == i then
                     addon.selectedMemberIndex = nil
                     self:UnlockHighlight()
@@ -315,8 +332,13 @@ function refreshMemberList()
             right.memberButtons[i] = btn
         end
 
-        btn:SetText(name)
+        -- Always reposition and resize, even if reusing
+        btn:ClearAllPoints()
+        local btnWidth = (right.memberScroll and right.memberScroll:GetWidth()) or (right:GetWidth() and right:GetWidth() - 14) or 120
+        btn:SetSize(math.max(1, btnWidth - 8), 20)
+        btn:SetPoint("TOPLEFT", right.memberContent, "TOPLEFT", 8, -yOffset)
 
+        btn:SetText(name)
         if addon.isFriendOnlineByName(name) then
             btn:GetFontString():SetTextColor(1, 1, 1)
         else
@@ -329,6 +351,8 @@ function refreshMemberList()
 
     right.memberContent:SetHeight(math.max(yOffset, 1))
 end
+
+
 
 -- StaticPopup dialogs (kept as in original)
 StaticPopupDialogs["INVITER3K_CREATE_GROUP"] = {
@@ -364,8 +388,12 @@ StaticPopupDialogs["INVITER3K_CREATE_GROUP"] = {
         local name = addon.trim(text)
         local ok, reason = addon.CreateGroup(name)
         if ok then
+            -- auto-select the new group
+            addon.selectedGroup = name
+            addon.selectedGroupButton = nil
+            addon.selectedMemberIndex = nil
             refreshGroupList()
-            addon.safePrint("Group created:", name)
+            addon.safePrint("Group created and selected:", name)
         else
             if reason == "exists" then
                 addon.safePrint("Group already exists:", name)
@@ -375,6 +403,7 @@ StaticPopupDialogs["INVITER3K_CREATE_GROUP"] = {
         end
     end,
 }
+
 
 StaticPopupDialogs["INVITER3K_RENAME_GROUP"] = {
     text = "Rename group '%s' to:",
@@ -418,6 +447,10 @@ StaticPopupDialogs["INVITER3K_RENAME_GROUP"] = {
         local newName = addon.trim(text)
         local ok, reason = addon.RenameGroup(oldName, newName)
         if ok then
+            -- auto-select the renamed group
+            addon.selectedGroup = newName
+            addon.selectedGroupButton = nil
+            addon.selectedMemberIndex = nil
             refreshGroupList()
             addon.safePrint("Renamed group:", oldName, "->", newName)
         else
@@ -429,6 +462,7 @@ StaticPopupDialogs["INVITER3K_RENAME_GROUP"] = {
         end
     end,
 }
+
 
 StaticPopupDialogs["INVITER3K_DELETE_GROUP"] = {
     text = "Delete group '%s'? This cannot be undone.",
@@ -459,15 +493,22 @@ StaticPopupDialogs["INVITER3K_REMOVE_MEMBER"] = {
             local grp = data.group
             local idx = data.index
             if addon.RemoveMemberFromGroup(grp, idx) then
+                -- clear selection after removal
                 addon.selectedMemberIndex = nil
+                if addon.gui and addon.gui.rightPane and addon.gui.rightPane.memberButtons then
+                    for _, btn in ipairs(addon.gui.rightPane.memberButtons) do
+                        btn:UnlockHighlight()
+                    end
+                end
                 refreshMemberList()
-                addon.safePrint("Removed member from group.")
+                addon.safePrint("Removed member from group:", grp)
             else
                 addon.safePrint("Remove failed.")
             end
         end
     end,
 }
+
 
 -- Rebuild panes on show/resize and initial refresh
 gui:HookScript("OnShow", function()

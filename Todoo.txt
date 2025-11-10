@@ -1,8 +1,0 @@
-TODOO ON THIS BRANCH BEFORE RELEASE (DONT INCLUDE IN MAIN)
-
-Fix bug when deleting groups(name not updating in selected group when
-2 groups and delete 1 nothing shows) and not updating the group list
-
-Test invite function of groups to check if anny bugs are there
-
-DONT FORGET UPDATE CURSEFORGE DESCRIPTION AFTER UPDATE
