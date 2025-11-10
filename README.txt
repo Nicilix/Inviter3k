@@ -1,58 +1,93 @@
-==================================================
-Inviter3k
-Version 1.0.0
-Author: Nicilix
-==================================================
+# Inviter3k
 
-Inviter3k is a lightweight World of Warcraft addon that helps you invite
-specific Battle.net friends to your group with a single click. It includes
-a clean UI, a minimap button, and automatically remembers your invite list.
+Lightweight World of Warcraft addon for creating, managing, and quickly inviting saved groups of BattleTags or character names. Provides an easy GUI, slash commands, and a minimap launcher for fast in‑game access.
 
---------------------------------------------------
-FEATURES
---------------------------------------------------
-• Add BattleTag names to your personal invite list
-• One-click "Invite All Online" button
-• Friends currently in WoW show up in bright text
-• Offline friends are dimmed for clarity
-• Right-click minimap icon to toggle the UI
-• Remembers your list between sessions
-• Does not require any third-party UI addons
+---
 
---------------------------------------------------
-HOW TO INSTALL
---------------------------------------------------
-1. Download or receive the `Inviter3k.zip` file.
-2. Extract it.
-3. Move the extracted folder into:
+## Features
+- Create, rename, and delete named groups  
+- Add and remove members from groups (BattleTags or character names)  
+- Invite an entire saved group from the GUI or with a slash command  
+- Scrollable, dynamically laid-out Groups and Members panes that reflow on resize  
+- Minimap launcher via LibDataBroker + LibDBIcon  
+- Simple, robust slash command interface for quick chat control
 
-   World of Warcraft/_retail_/Interface/AddOns/
+---
 
-   So the final path looks like:
-   .../AddOns/Inviter3k/Inviter3k.lua
+## Installation
+1. Download or clone this repository.  
+2. Place the `Inviter3k` folder into your World of Warcraft AddOns directory:
+   - Example (Retail): `.../World of Warcraft/_retail_/Interface/AddOns/Inviter3k`  
+3. Ensure required libraries are installed and enabled:
+   - `LibDataBroker-1.1`  
+   - `LibDBIcon-1.0`  
+4. Enable the addon in the in‑game AddOns menu or restart the game.  
+5. The addon creates saved variables on first load.
 
-4. Launch WoW or type `/reload` if already in game.
+---
 
---------------------------------------------------
-HOW TO USE
---------------------------------------------------
-• Open the addon UI using one of the slash commands:
-    /inviter3k
-    /i3k
+## Usage
 
-• Or click the minimap icon.
+### GUI
+- Toggle main window: `/inviter3k` or `/i3k`  
+- Left pane — Groups: New, Rename, Delete  
+- Right pane — Members: edit box + Add, Remove Selected, Invite Group  
+- Select a group on the left to view and manage its members on the right
 
-• To add a Battle.net friend:
-  - Type their BattleTag name (e.g., `Example#1234`)
-  - Click "Add"
+### Slash commands
+- `/inviter3khelp` or `/i3khelp` — Show help and command usage  
+- `/inviter3k` or `/i3k` — Toggle the main GUI  
+- `/invite3k` or `/i3kinvite` — Invite the currently selected group (when GUI open)  
+- `/invite3k <group>` — Invite a specific saved group by name or unique prefix (case-insensitive)  
+  - Examples: `/invite3k Raiders`, `/invite3k raid` (if unique)  
+- `/i3ktoggle` or `/inviter3ktoggle` — Toggle minimap icon; accepts optional argument: `show` / `hide`  
+  - Examples: `/i3ktoggle`, `/i3ktoggle hide`, `/i3ktoggle show`
 
-• Click "Invite All Online" to invite every friend in the list
-  who is currently online in World of Warcraft.
+Notes:
+- Running `/invite3k` with no argument will invite the group currently selected in the GUI (if any). If no group is selected and no argument is given, the command lists available groups and usage.  
+- Group matching is case-insensitive and accepts unique prefixes. If multiple groups share the same prefix, supply a more specific name or select the group in the GUI.
 
---------------------------------------------------
-SUPPORT & FEEDBACK
---------------------------------------------------
-If you encounter issues, suggestions, or want improvements,
-contact the author in-game or on Discord.
+---
 
-Enjoy inviting the homies faster.
+## Examples
+- Invite the group named "Raiders":
+  - `/invite3k Raiders`  
+- Invite the currently selected group in the GUI:
+  - `/invite3k`  
+- Toggle minimap icon:
+  - `/i3ktoggle hide`
+
+---
+
+## Troubleshooting
+- Minimap icon missing: verify LibDataBroker and LibDBIcon are installed and enabled.  
+- Very long group names can change layout; shorten names or resize the window.
+
+---
+
+
+## License
+
+MIT License
+
+Copyright (c) 2025 Nicilix
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
