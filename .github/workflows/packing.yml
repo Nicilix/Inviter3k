@@ -36,6 +36,7 @@ jobs:
           cp icon.tga "$ADDON_DIR/" 2>/dev/null || true
           cp Inviter3k.lua "$ADDON_DIR/" 2>/dev/null || true
           cp Inviter3k.toc "$ADDON_DIR/" 2>/dev/null || true
+          cp -r Lua "$ADDON_DIR/" 2>/dev/null || true
           echo "stage=$STAGE" >> $GITHUB_OUTPUT
 
       - name: Create ZIP outside repo then move into .release
