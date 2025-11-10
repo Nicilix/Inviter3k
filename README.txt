@@ -1,21 +1,21 @@
 # Inviter3k
 
-Lightweight World of Warcraft addon for creating, managing, and quickly inviting saved groups of BattleTags or character names. Provides an easy GUI, slash commands, and a minimap launcher for fast in‑game access.
+Lightweight World of Warcraft addon for creating, managing, and quickly inviting saved groups of BattleTags. Provides an easy GUI, slash commands, and a toggleable minimap button for fast in‑game access.
 
 ---
 
 ## Features
 - Create, rename, and delete named groups  
-- Add and remove members from groups (BattleTags or character names)  
+- Add and remove members from groups (BattleTags)  
 - Invite an entire saved group from the GUI or with a slash command  
-- Scrollable, dynamically laid-out Groups and Members panes that reflow on resize  
+- Scrollable Groups and Members panes 
 - Minimap launcher via LibDataBroker + LibDBIcon  
 - Simple, robust slash command interface for quick chat control
 
 ---
 
 ## Installation
-1. Download or clone this repository.  
+1. Download or receive the zip file.
 2. Place the `Inviter3k` folder into your World of Warcraft AddOns directory:
    - Example (Retail): `.../World of Warcraft/_retail_/Interface/AddOns/Inviter3k`  
 3. Ensure required libraries are installed and enabled:
